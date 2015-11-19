@@ -1,4 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
   <display-name>Moro_RWS</display-name>
+  
+  
+	<listener>
+		<description>The class instance which will be notified when the application context has been initialized and destroyed</description>
+		<listener-class>ad.uda.moro.rws.MoroRWSFactory</listener-class>
+	</listener>
+
+	<login-config>
+		<auth-method>BASIC</auth-method>
+		<realm-name>ApplicationRealm</realm-name>
+	</login-config>
+
+	<security-role>
+		<role-name>USER</role-name>
+	</security-role>
+	<security-role>
+		<role-name>ADMIN</role-name>
+	</security-role>
+
+	<security-constraint>
+		<display-name>dossiers</display-name>
+		<web-resource-collection>
+			<web-resource-name>Dossiers Secure</web-resource-name>
+			<url-pattern>/dossiers/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>PUT</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+			<role-name>USER</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<display-name>dossiers</display-name>
+		<web-resource-collection>
+			<web-resource-name>Dossiers Secure</web-resource-name>
+			<url-pattern>/dossiers/*</url-pattern>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+
+	<security-constraint>
+		<display-name>serveis</display-name>
+		<web-resource-collection>
+			<web-resource-name>Serveis Secure</web-resource-name>
+			<url-pattern>/serveis/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>PUT</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+			<role-name>USER</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<display-name>serveis</display-name>
+		<web-resource-collection>
+			<web-resource-name>Serveis Secure</web-resource-name>
+			<url-pattern>/serveis/*</url-pattern>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+		</auth-constraint>
+	</security-constraint>
+	
+	
+		<security-constraint>
+		<display-name>parametres</display-name>
+		<web-resource-collection>
+			<web-resource-name>Parametres Secure</web-resource-name>
+			<url-pattern>/parametres/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>PUT</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+			<role-name>USER</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<display-name>parametres</display-name>
+		<web-resource-collection>
+			<web-resource-name>Parametres Secure</web-resource-name>
+			<url-pattern>/parametres/*</url-pattern>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+		</auth-constraint>
+	</security-constraint>
+	
+	
+		<security-constraint>
+		<display-name>valoracions</display-name>
+		<web-resource-collection>
+			<web-resource-name>Valoracions Secure</web-resource-name>
+			<url-pattern>/valoracions/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>PUT</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+			<role-name>USER</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<display-name>valoracions</display-name>
+		<web-resource-collection>
+			<web-resource-name>Valoracions Secure</web-resource-name>
+			<url-pattern>/valoracions/*</url-pattern>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+		</auth-constraint>
+	</security-constraint>
+	
+	
+		<security-constraint>
+		<display-name>activitatdossiers</display-name>
+		<web-resource-collection>
+			<web-resource-name>Activitatdossiers Secure</web-resource-name>
+			<url-pattern>/activitatdossiers/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>PUT</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+			<role-name>USER</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<display-name>activitatdossiers</display-name>
+		<web-resource-collection>
+			<web-resource-name>Activitatdossiers Secure</web-resource-name>
+			<url-pattern>/activitatdossiers/*</url-pattern>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>ADMIN</role-name>
+		</auth-constraint>
+	</security-constraint>
 </web-app>
