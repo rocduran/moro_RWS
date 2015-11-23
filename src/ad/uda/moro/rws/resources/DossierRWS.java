@@ -66,7 +66,7 @@ public class DossierRWS {
 	
 	/**
 	 * Returns the details of an <code>Dossier</code>
-	 * @param idDossier The agency code
+	 * @param idDossier El identificador del dossier
 	 * @return A Standard RESTful response.
 	 */
 	@GET()
@@ -89,21 +89,49 @@ public class DossierRWS {
 		
 		// Get the Dossier details and return the response:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		Dossier agency = null;
+		Dossier dossier = null;
 		try {
-			agency = csr.getDossierById(Integer.valueOf(idDossier)); // get the Dossier instance
-			if (agency == null) // Not found
+			dossier = csr.getDossierById(Integer.valueOf(idDossier)); // get the Dossier instance
+			if (dossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			return Response.ok(agency).build();
+			return Response.ok(dossier).build();
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 	}	
 	
 	/**
-	 * Modifies the name of an <code>Agency</code>, specified in the RESTful request path
-	 * @param idDossier The agency code.
-	 * @param descripcio The new Agency name. This must be a valid text and cannot be <b>null</b>
+	 * Returns a list of <code>Dossier</code>
+	 * @return A Standard RESTful response.
+	 */
+	@GET()
+	@Path("")
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@PermitAll
+	public Response getDossier() {
+		
+		// Check environment:
+		if (!readyToProcess) // Cannot process requests.
+			return Response.status(Status.SERVICE_UNAVAILABLE).header("Message", "Moro service not available").build();
+		
+		
+		// Get the Dossier details and return the response:
+		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
+		Dossier[] dossiers = null;
+		try {
+			dossiers = csr.getDossierList(); // get the Dossier instance
+			if (dossiers == null) // Not found
+				return Response.status(Status.NO_CONTENT).build();
+			return Response.ok(dossiers).build();
+		} catch (MoroException ex) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
+		}
+	}	
+	
+	/**
+	 * Modifies the name of an <code>Dossier</code>, specified in the RESTful request path
+	 * @param idDossier El identificador del dossier.
+	 * @param descripcio The new Dossier name. This must be a valid text and cannot be <b>null</b>
 	 * @return  A Standard RESTful response. If OK, it returns the details of the modified Dossier instance.
 	 */
 	@PUT()
@@ -112,6 +140,7 @@ public class DossierRWS {
 	@RolesAllowed({"USER","ADMIN"})
 	public Response updateDescripcioDossier(@PathParam("idDossier") String idDossier,
 			@FormParam("descripcio") String descripcio,
+			@FormParam("preu") String preu,
 			@Context SecurityContext securityContext) {
 		
 		// Display security information if available:
@@ -148,6 +177,7 @@ public class DossierRWS {
 				return Response.status(Status.NO_CONTENT).build();
 
 			dossier.setDescripcio(descripcio); // Set new name in Dossier
+			dossier.setPreu(Integer.valueOf(preu));
 			csr.updateDossier(dossier); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
@@ -166,7 +196,7 @@ public class DossierRWS {
 	@Consumes("application/xml")
 	@Produces("text/plain")
 	@RolesAllowed("ADMIN")
-	public Response postAgency(Dossier dossier, @Context SecurityContext securityContext) {
+	public Response postDossier(Dossier dossier, @Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -177,7 +207,7 @@ public class DossierRWS {
 		// Check incoming Entity instance:
 		if (dossier == null)
 			return Response.status(Status.BAD_REQUEST).header("Message", "Dossier code not specified").build();
-		System.out.println("postAgency() - Agency details: [" + dossier.toString() + "]");
+		System.out.println("postDossier() - Dossier details: [" + dossier.toString() + "]");
 		if (!dossier.hasValidInformation())
 			return Response.status(Status.BAD_REQUEST).header("Message", "Dossier instance contains bad information").build();
 		
@@ -202,7 +232,7 @@ public class DossierRWS {
 	/**
 	 * Removes an existent <code>Dossier</code> instance. The unique <b>code</b> in the Path parameter will be used to locate
 	 * the Dossier to remove.
-	 * @param idDossier The code of the Agency instance to remove.
+	 * @param idDossier The code of the Dossier instance to remove.
 	 * @return A standard <code>Response</code> instance. If its status is OK, it will return the text "Succeeded" in the response body.
 	 */
 	@DELETE()
@@ -218,28 +248,28 @@ public class DossierRWS {
 		}
 
 		// Check environment:
-		System.out.println("deleteAgency() - agencyCode: [" + idDossier +"]");
+		System.out.println("deleteDossier() - idDossier: [" + idDossier +"]");
 		if (!readyToProcess) // Cannot process requests.
 			return Response.status(Status.SERVICE_UNAVAILABLE).header("Message", "Krypton service not available").build();
 		
 		// Check path parameter:
 		if (idDossier == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "Agency code not specified").build();
+			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier not specified").build();
 		if (!(Integer.valueOf(idDossier)>=0))
-			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid agency code [" + idDossier + "]").build();
+			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid idDossier [" + idDossier + "]").build();
 		
-		// Delete the Agency (if exists):
+		// Delete del Dossier (if exists):
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		Dossier dossier = null;
 		try {
-			dossier = csr.getDossierById(Integer.valueOf(idDossier)); // Get Agency details
+			dossier = csr.getDossierById(Integer.valueOf(idDossier)); // Get Dossier details
 			if (dossier == null) // Not found
-				return Response.status(Status.BAD_REQUEST).header("Message", "Agency with code [" + idDossier + "] does not exist").build();
+				return Response.status(Status.BAD_REQUEST).header("Message", "Dossier with idDossier [" + idDossier + "] does not exist").build();
 			/* TODO Mirar si fa falta controlar algo.
-			 * if (dossier.hasCustomers()) // Agency has customers. This is not allowed
-				return Response.status(Status.BAD_REQUEST).header("Message", "Agency with code [" + idDossier + "] has Customers assigned").build();*/
+			 * if (dossier.hasCustomers()) // Dossier has customers. This is not allowed
+				return Response.status(Status.BAD_REQUEST).header("Message", "Dossier with code [" + idDossier + "] has Customers assigned").build();*/
 
-			csr.deleteDossier(Integer.valueOf(idDossier)); // Delete Agency NOW
+			csr.deleteDossier(Integer.valueOf(idDossier)); // Delete Dossier NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
