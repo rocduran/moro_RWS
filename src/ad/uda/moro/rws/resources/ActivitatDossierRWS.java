@@ -49,23 +49,6 @@ public class ActivitatDossierRWS {
 		readyToProcess = (factory != null) ? true : false; // Set flag according to factory availability
 	}
 	
-	@GET()
-	@Produces("text/plain")
-	@Path("hellotest")
-	public String sayHello(){
-		System.out.println("Somebody called sayHello()!");
-		return "HelloTest: Hello World!";
-	}
-	
-	@GET()
-	@Produces("text/plain")
-	@Path("anothertest")
-	public String anotherTest(){
-		System.out.println("Somebody called anotherTest()!");
-		return "HelloTest: Another Test!";
-	}
-	
-	
 	/**
 	 * Returns the details of an <code>ActivitatDossier</code>
 	 * @param idAd El identificador del activitatDossier
