@@ -114,17 +114,22 @@ public class DossierRWS {
 	/**
 	 * Modifies the name of an <code>Dossier</code>, specified in the RESTful request path
 	 * @param idDossier El identificador del dossier.
-	 * @param descripcio The new Dossier name. This must be a valid text and cannot be <b>null</b>
+	 * @param descripcio The new Dossier descripcio. This must be a valid text and cannot be <b>null</b>
+	 * @param preu the newDossier preu
 	 * @return  A Standard RESTful response. If OK, it returns the details of the modified Dossier instance.
 	 */
 	@PUT()
-	@Path("{idDossier}")
+	@Path("")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@RolesAllowed({"USER","ADMIN"})
-	public Response updateDescripcioDossier(@PathParam("idDossier") String idDossier,
-			@FormParam("descripcio") String descripcio,
-			@FormParam("preu") String preu,
+	//@RolesAllowed({"USER","ADMIN"})
+	@PermitAll
+	public Response updateDescripcioDossier(Dossier dossier,
 			@Context SecurityContext securityContext) {
+		
+		
+		int idDossier = dossier.getId();
+		String descripcio = dossier.getDescripcio();
+		int preu = dossier.getPreu();
 		
 		// Display security information if available:
 		if (securityContext != null) {
@@ -137,9 +142,8 @@ public class DossierRWS {
 		if (!readyToProcess) // Cannot process requests.
 			return Response.status(Status.SERVICE_UNAVAILABLE).header("Message", "Moro service not available").build();
 		
+		
 		// Check path and form parameter:
-		if (idDossier == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "iDDossier not specified").build();
 		if (!(Integer.valueOf(idDossier)>=0))
 			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid idDossier [" + idDossier + "]").build();
 		if (descripcio == null)
@@ -153,20 +157,20 @@ public class DossierRWS {
 		
 		// Get the Dossier details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		Dossier dossier = null;
+		Dossier newDossier = null;
 		try {
-			dossier = csr.getDossierById(Integer.valueOf(idDossier)); // Get Dossier details
-			if (dossier == null) // Not found
+			newDossier = csr.getDossierById(Integer.valueOf(idDossier)); // Get Dossier details
+			if (newDossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
 
-			dossier.setDescripcio(descripcio); // Set new name in Dossier
-			dossier.setPreu(Integer.valueOf(preu));
-			csr.updateDossier(dossier); // Persist modification NOW
+			newDossier.setDescripcio(descripcio); // Set new name in Dossier
+			newDossier.setPreu(Integer.valueOf(preu));
+			csr.updateDossier(newDossier); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 		
-		return Response.ok(dossier).build();
+		return Response.ok(newDossier).build();
 	}
 	
 	/**
@@ -176,8 +180,8 @@ public class DossierRWS {
 	 */
 	@POST()
 	@Path("")
-	@Consumes("application/xml")
 	@Produces("text/plain")
+	@Consumes(MediaType.APPLICATION_XML)
 	@RolesAllowed("ADMIN")
 	public Response postDossier(Dossier dossier, @Context SecurityContext securityContext) {
 
