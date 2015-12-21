@@ -120,17 +120,22 @@ public class ServeiRWS {
 	@PUT()
 	@Path("{idServei}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@RolesAllowed({"USER","ADMIN"})
+	@Consumes(MediaType.APPLICATION_XML)
+//	@RolesAllowed({"USER","ADMIN"})
+	@PermitAll
 	public Response updateDescripcioServei(@PathParam("idServei") String idServei,
-			@FormParam("descripcio") String descripcio,
+			Servei servei,
 			@Context SecurityContext securityContext) {
+		int idTipus = servei.getIdTipus();
+		String descripcio = servei.getDescripcio();
 		
 		// Display security information if available:
 		if (securityContext != null) {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putServei() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateDescripcioServei() - new name: [" + descripcio + "]");
+		System.out.println("updateDescripcioServei() - ID: [" + idServei + "]");
+		System.out.println("updateDescripcioServei() - new descripcio: [" + descripcio + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -148,23 +153,24 @@ public class ServeiRWS {
 		if (descripcio=="")
 			return Response.status(Status.BAD_REQUEST).header("Message", "Descripcio del servei [" + descripcio + "] no es vàlid").build();
 		
-		System.out.println("updateDescripcioServei() - descripcio: [" + descripcio + "]");
+		System.out.println("updateDescripcioServei() - new idTipus: [" + idTipus + "]");
 		
 		// Get the Servei details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		Servei servei = null;
+		Servei newServei = null;
 		try {
-			servei = csr.getServeiById(Integer.valueOf(idServei)); // Get Servei details
-			if (servei == null) // Not found
+			newServei = csr.getServeiById(Integer.valueOf(idServei)); // Get Servei details
+			if (newServei == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-
-			servei.setDescripcio(descripcio); // Set new name in Servei
-			csr.updateServei(servei); // Persist modification NOW
+			
+			newServei.setIdTipus(idTipus);// Set new idTipus in Servei
+			newServei.setDescripcio(descripcio); // Set new descripcio in Servei
+			csr.updateServei(newServei); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 		
-		return Response.ok(servei).build();
+		return Response.ok(newServei).build();
 	}
 	
 	/**
@@ -173,11 +179,11 @@ public class ServeiRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the text "Succeeded".
 	 */
 	@POST()
-	@Path("")
-	@Consumes("application/xml")
+	@Path("{idServei}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
-	public Response postServei(Servei servei, @Context SecurityContext securityContext) {
+	@Consumes(MediaType.APPLICATION_XML)
+	@PermitAll
+	public Response postServei(@PathParam("idServei") String idServei, Servei servei, @Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -200,7 +206,7 @@ public class ServeiRWS {
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		try {
 			//FIXME En teoria no necessitariem controlar el id del Servei
-			if (csr.getServeiById(servei.getId()) != null) // Code of new Servei already in use
+			if (csr.getServeiById(Integer.valueOf(idServei)) != null) // Code of new Servei already in use
 				return Response.status(Status.BAD_REQUEST).header("Message", "Servei with code [" + servei.getId() + "] already exists").build();
 			csr.addServei(servei); // Persist new Servei NOW
 		} catch (MoroException ex) {
@@ -219,7 +225,7 @@ public class ServeiRWS {
 	@DELETE()
 	@Path("{idServei}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
+	@PermitAll
 	public Response deleteServei(@PathParam("idServei") String idServei, @Context SecurityContext securityContext) {
 		
 		// Display security information if available:

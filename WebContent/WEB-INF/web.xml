@@ -55,6 +55,8 @@
 			<url-pattern>/serveis/*</url-pattern>
 			<http-method>GET</http-method>
 			<http-method>PUT</http-method>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>ADMIN</role-name>
@@ -62,18 +64,17 @@
 		</auth-constraint>
 	</security-constraint>
 
-	<security-constraint>
-		<display-name>serveis</display-name>
-		<web-resource-collection>
-			<web-resource-name>Serveis Secure</web-resource-name>
-			<url-pattern>/serveis/*</url-pattern>
-			<http-method>POST</http-method>
-			<http-method>DELETE</http-method>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ADMIN</role-name>
-		</auth-constraint>
-	</security-constraint>
+<!-- 	<security-constraint> -->
+<!-- 		<display-name>serveis</display-name> -->
+<!-- 		<web-resource-collection> -->
+<!-- 			<web-resource-name>Serveis Secure</web-resource-name> -->
+<!-- 			<url-pattern>/serveis/*</url-pattern> -->
+
+<!-- 		</web-resource-collection> -->
+<!-- 		<auth-constraint> -->
+<!-- 			<role-name>ADMIN</role-name> -->
+<!-- 		</auth-constraint> -->
+<!-- 	</security-constraint> -->
 	
 	
 		<security-constraint>
@@ -83,6 +84,8 @@
 			<url-pattern>/parametres/*</url-pattern>
 			<http-method>GET</http-method>
 			<http-method>PUT</http-method>
+			<http-method>POST</http-method>
+			<http-method>DELETE</http-method>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>ADMIN</role-name>
@@ -90,18 +93,17 @@
 		</auth-constraint>
 	</security-constraint>
 
-	<security-constraint>
-		<display-name>parametres</display-name>
-		<web-resource-collection>
-			<web-resource-name>Parametres Secure</web-resource-name>
-			<url-pattern>/parametres/*</url-pattern>
-			<http-method>POST</http-method>
-			<http-method>DELETE</http-method>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>ADMIN</role-name>
-		</auth-constraint>
-	</security-constraint>
+<!-- 	<security-constraint> -->
+<!-- 		<display-name>parametres</display-name> -->
+<!-- 		<web-resource-collection> -->
+<!-- 			<web-resource-name>Parametres Secure</web-resource-name> -->
+<!-- 			<url-pattern>/parametres/*</url-pattern> -->
+
+<!-- 		</web-resource-collection> -->
+<!-- 		<auth-constraint> -->
+<!-- 			<role-name>ADMIN</role-name> -->
+<!-- 		</auth-constraint> -->
+<!-- 	</security-constraint> -->
 	
 	
 		<security-constraint>

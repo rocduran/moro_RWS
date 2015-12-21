@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 
 import ad.uda.moro.MoroException;
+import ad.uda.moro.ejb.entity.Dossier;
 import ad.uda.moro.ejb.entity.Parametre;
 import ad.uda.moro.ejb.session.EnquestesServiceRemote;
 import ad.uda.moro.rws.MoroRWSFactory;
@@ -120,17 +121,22 @@ public class ParametreRWS {
 	@PUT()
 	@Path("{idParam}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@RolesAllowed({"USER","ADMIN"})
-	public Response updateDescripcioParametre(@PathParam("idParam") String idParam,
-			@FormParam("descripcio") String descripcio,
+	@Consumes(MediaType.APPLICATION_XML)
+//	@RolesAllowed({"USER","ADMIN"})
+	@PermitAll
+	public Response updateDescripcioParametre(@PathParam("idParam") String idParam, Parametre parametre,
 			@Context SecurityContext securityContext) {
+		
+		int idTipus = parametre.getIdTipus();
+		String descripcio = parametre.getDescripcio();
 		
 		// Display security information if available:
 		if (securityContext != null) {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putParametre() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateDescripcioParametre() - new name: [" + descripcio + "]");
+		System.out.println("updateDescripcioParametre() - ID: [" + idParam + "]");
+		System.out.println("updateDescripcioParametre() - new descripcio: [" + descripcio + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -148,23 +154,23 @@ public class ParametreRWS {
 		if (descripcio=="")
 			return Response.status(Status.BAD_REQUEST).header("Message", "Descripcio del parametre [" + descripcio + "] no es vàlid").build();
 		
-		System.out.println("updateDescripcioParametre() - descripcio: [" + descripcio + "]");
+		System.out.println("updateDescripcioParametre() - new idTipus: [" + idTipus + "]");
 		
 		// Get the Parametre details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		Parametre parametre = null;
+		Parametre newParametre = null;
 		try {
-			parametre = csr.getParametreById(Integer.valueOf(idParam)); // Get Parametre details
-			if (parametre == null) // Not found
+			newParametre = csr.getParametreById(Integer.valueOf(idParam)); // Get Parametre details
+			if (newParametre == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-
-			parametre.setDescripcio(descripcio); // Set new name in Parametre
+			newParametre.setIdTipus(idTipus);; // Set new descripcio in Parametre
+			newParametre.setDescripcio(descripcio); // Set new descripcio in Parametre
 			csr.updateParametre(parametre); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 		
-		return Response.ok(parametre).build();
+		return Response.ok(newParametre).build();
 	}
 	
 	/**
@@ -173,11 +179,11 @@ public class ParametreRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the text "Succeeded".
 	 */
 	@POST()
-	@Path("")
-	@Consumes("application/xml")
+	@Path("{idParam}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
-	public Response postParametre(Parametre parametre, @Context SecurityContext securityContext) {
+	@Consumes(MediaType.APPLICATION_XML)
+	@PermitAll
+	public Response postParametre(@PathParam("idParam") String idParam, Parametre parametre, @Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -200,7 +206,7 @@ public class ParametreRWS {
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		try {
 			//FIXME En teoria no necessitariem controlar el id del Parametre
-			if (csr.getParametreById(parametre.getId()) != null) // Code of new Parametre already in use
+			if (csr.getParametreById(Integer.valueOf(idParam)) != null) // Code of new Parametre already in use
 				return Response.status(Status.BAD_REQUEST).header("Message", "Parametre with code [" + parametre.getId() + "] already exists").build();
 			csr.addParametre(parametre); // Persist new Parametre NOW
 		} catch (MoroException ex) {
@@ -219,7 +225,7 @@ public class ParametreRWS {
 	@DELETE()
 	@Path("{idParam}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
+	@PermitAll
 	public Response deleteParametre(@PathParam("idParam") String idParam, @Context SecurityContext securityContext) {
 		
 		// Display security information if available:
