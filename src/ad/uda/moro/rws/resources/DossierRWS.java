@@ -119,15 +119,14 @@ public class DossierRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the details of the modified Dossier instance.
 	 */
 	@PUT()
-	@Path("")
+	@Path("{idDossier}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@Consumes(MediaType.APPLICATION_XML)
 	//@RolesAllowed({"USER","ADMIN"})
 	@PermitAll
-	public Response updateDescripcioDossier(Dossier dossier,
+	public Response updateDescripcioDossier(@PathParam("idDossier") String idDossier, Dossier dossier,
 			@Context SecurityContext securityContext) {
 		
-		
-		int idDossier = dossier.getId();
 		String descripcio = dossier.getDescripcio();
 		int preu = dossier.getPreu();
 		
@@ -136,7 +135,8 @@ public class DossierRWS {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putDossier() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateDescripcioDossier() - new name: [" + descripcio + "]");
+		System.out.println("updateDescripcioDossier() - ID: [" + idDossier + "]");
+		System.out.println("updateDescripcioDossier() - new descripcio: [" + descripcio + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -153,7 +153,7 @@ public class DossierRWS {
 		if (descripcio=="")
 			return Response.status(Status.BAD_REQUEST).header("Message", "Descripcio del dossier [" + descripcio + "] no es vàlid").build();
 		
-		System.out.println("updateDescripcioDossier() - descripcio: [" + descripcio + "]");
+		System.out.println("updateDescripcioDossier() - New preu: [" + preu + "]");
 		
 		// Get the Dossier details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
@@ -164,7 +164,7 @@ public class DossierRWS {
 				return Response.status(Status.NO_CONTENT).build();
 
 			newDossier.setDescripcio(descripcio); // Set new name in Dossier
-			newDossier.setPreu(Integer.valueOf(preu));
+			newDossier.setPreu(preu);
 			csr.updateDossier(newDossier); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
@@ -179,11 +179,12 @@ public class DossierRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the text "Succeeded".
 	 */
 	@POST()
-	@Path("")
+	@Path("{idDossier}")
 	@Produces("text/plain")
 	@Consumes(MediaType.APPLICATION_XML)
-	@RolesAllowed("ADMIN")
-	public Response postDossier(Dossier dossier, @Context SecurityContext securityContext) {
+	@PermitAll
+	public Response postDossier(@PathParam("idDossier") String idDossier, Dossier dossier,
+			@Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -206,7 +207,7 @@ public class DossierRWS {
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		try {
 			//FIXME En teoria no necessitariem controlar el id del Dossier
-			if (csr.getDossierById(dossier.getId()) != null) // Code of new Dossier already in use
+			if (csr.getDossierById(Integer.valueOf(idDossier)) != null) // Code of new Dossier already in use
 				return Response.status(Status.BAD_REQUEST).header("Message", "Dossier with code [" + dossier.getId() + "] already exists").build();
 			csr.addDossier(dossier); // Persist new Dossier NOW
 		} catch (MoroException ex) {
@@ -225,7 +226,7 @@ public class DossierRWS {
 	@DELETE()
 	@Path("{idDossier}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
+	@PermitAll
 	public Response deleteDossier(@PathParam("idDossier") String idDossier, @Context SecurityContext securityContext) {
 		
 		// Display security information if available:
