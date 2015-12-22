@@ -120,20 +120,20 @@ public class ActivitatDossierRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the details of the modified ActivitatDossier instance.
 	 */
 	@PUT()
-	@Path("{idAd}")
+	@Path("{idAd}/{idDossier}/{idServei}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	@Consumes(MediaType.APPLICATION_XML)
 //	@RolesAllowed({"USER","ADMIN"})
 	@PermitAll
-	public Response updateDescripcioActivitatDossier(@PathParam("idAd") String idAd, ActivitatDossier activitatDossier,
+	public Response updateDescripcioActivitatDossier(@PathParam("idAd") String idAd, @PathParam("idDossier") String idDossier,
+			@PathParam("idServei") String idServei,
 			@Context SecurityContext securityContext) {
-		
 		// Display security information if available:
 		if (securityContext != null) {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putActivitatDossier() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateDescripcioActivitatDossier() - new idDossier: [" + activitatDossier.getIdDossier().getId() + "] - new idServei: [" + activitatDossier.getIdServei().getId() + "]");
+		System.out.println("updateDescripcioActivitatDossier() - new idDossier: [" + idDossier + "] - new idServei: [" + idServei + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -142,9 +142,10 @@ public class ActivitatDossierRWS {
 		// Check path and form parameter:
 		if (idAd == null)
 			return Response.status(Status.BAD_REQUEST).header("Message", "idAd not specified").build();
-		if (!activitatDossier.hasValidInformation())
-			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid ActivitatDossier [" + activitatDossier + "]").build();
-		
+		if (idDossier == null)
+			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier not specified").build();
+		if (idServei == null)
+			return Response.status(Status.BAD_REQUEST).header("Message", "idServei not specified").build();
 		
 		// Get the ActivitatDossier details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
@@ -153,11 +154,11 @@ public class ActivitatDossierRWS {
 			newActivitatDossier = csr.getActivitatDossierById(Integer.valueOf(idAd)); // Get ActivitatDossier details
 			if (newActivitatDossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			Dossier dossier = csr.getDossierById(activitatDossier.getIdDossier().getId()); // get the Dossier instance
+			Dossier dossier = csr.getDossierById(Integer.valueOf(idDossier)); // get the Dossier instance
 			if (dossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
 			newActivitatDossier.setIdDossier(dossier); // Set new dossier in ActivitatDossier
-			Servei servei = csr.getServeiById(activitatDossier.getIdServei().getId()); // get the Servei instance
+			Servei servei = csr.getServeiById(Integer.valueOf(idServei)); // get the Servei instance
 			if (servei == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
 			newActivitatDossier.setIdServei(servei); // Set new servei in ActivitatDossier
