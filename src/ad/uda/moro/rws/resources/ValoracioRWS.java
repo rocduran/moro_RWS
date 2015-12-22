@@ -1,4 +1,5 @@
 package ad.uda.moro.rws.resources;
+
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
@@ -25,19 +26,16 @@ import ad.uda.moro.ejb.entity.Valoracio;
 import ad.uda.moro.ejb.session.EnquestesServiceRemote;
 import ad.uda.moro.rws.MoroRWSFactory;
 
+/**
+ * @author rduran &amp; mmiret
+ *
+ */
 @RequestScoped
 @Path("valoracions")
 @Produces({ "application/xml", "application/json" })
 @Consumes({ "application/xml", "application/json" })
 public class ValoracioRWS {
-/*TODO Pa que te hagas una idea:
- * Copiarpegar del (por ejemplo) ActivitatDossierRWS
- * Fas un buscar i canvies tots els ActivitatDossier per Valoracio (activa el case sensitive)
- * Fas un buscar i canvies tots els activitatDossier per valoracio (por eso el case sensitive)
- * Despres busques si hi ha algun error i acabes de corretgir alguna cosa que falti, com funcions.
- * Has d'editar el updateValoracio perque insereixi tots els parametres de valoracio.
- * i ya esta amigos, ya tenemos un bizcocho de chocolate y crema para estas navidades.  
-	*/
+
 	// RESTful web service Context;
 	MoroRWSFactory factory = null;
 	boolean readyToProcess = false;
@@ -46,6 +44,7 @@ public class ValoracioRWS {
 	* Default constructor. Will be called by the JAX-RS framework.
 	*/
 	public ValoracioRWS() {	
+		
 		// Get Factory:
 		factory = MoroRWSFactory.getInstance(); // Get the factory
 		readyToProcess = (factory != null) ? true : false; // Set flag according to factory availability
@@ -124,12 +123,10 @@ public class ValoracioRWS {
 	@PUT()
 	@Path("{idVal}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@RolesAllowed({"USER","ADMIN"})
-	public Response updateDescripcioActivitatDossier(@PathParam("idVal") String idVal,
-			@FormParam("idDossier")String idDossier,
-			@FormParam("idServei") String idServei,
-			@FormParam("idParam") String idParam,
-			@FormParam("valor") String valor,
+	@Consumes(MediaType.APPLICATION_XML)
+//	@RolesAllowed({"USER","ADMIN"})
+	@PermitAll
+	public Response updateDescripcioActivitatDossier(@PathParam("idVal") String idVal, Valoracio valoracio,
 			@Context SecurityContext securityContext) {
 		
 		// Display security information if available:
@@ -137,7 +134,7 @@ public class ValoracioRWS {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putValoracio() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateValoracio() - new idServei: [" + idServei + "] - new idParam: [" + idParam  + "] - new valor: [" + valor + "]");
+		System.out.println("updateValoracio() - new idServei: [" + valoracio.getIdServei() + "] - new idParam: [" + valoracio.getIdParam()  + "] - new valor: [" + valoracio.getValor() + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -146,70 +143,42 @@ public class ValoracioRWS {
 		// Check path and form parameter:
 		if (idVal == null)
 			return Response.status(Status.BAD_REQUEST).header("Message", "idVal not specified").build();
-		if (!(Integer.valueOf(idVal)>=0))
-			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid idVal [" + idVal + "]").build();
+		if (!valoracio.hasValidInformation())
+			return Response.status(Status.BAD_REQUEST).header("Message", "Valoracio [" + idVal + "] es invalida.").build();
 		
-		if (idDossier == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier de valoracio is null").build();
-		if (idDossier.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier de valoracio is empty").build();
-		if (idDossier=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier de valoracio [" + idDossier + "] no es vàlid").build();
-		
-		if (idServei == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei de valoracio is null").build();
-		if (idServei.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei de valoracio is empty").build();
-		if (idServei=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei de valoracio [" + idServei + "] no es vàlid").build();
-		
-		if (idParam == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idParam de valoracio is null").build();
-		if (idParam.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idParam  de valoracio is empty").build();
-		if (idParam=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "idParam de valoracio [" + idParam + "] no es vàlid").build();
-		
-		if (valor == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "valor of valoracio is null").build();
-		if (valor.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "valor  of valoracio is empty").build();
-		if (valor=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "valor of valoracior [" + valor + "] no es vàlid").build();
-		
-		System.out.println("updateValoracio() - isServei: [" + idServei + "] - idParam: [" + idParam + "] - valor: [" + valor + "]");
+		System.out.println("updateValoracio() - isServei: [" + valoracio.getIdServei().getId() + "] - idParam: [" + valoracio.getIdParam().getId() + "] - valor: [" + valoracio.getValor() + "]");
 		
 		// Get the ActivitatDossier details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		Valoracio valoracio = null;
+		Valoracio newValoracio = null;
 		try {
-			valoracio = csr.getValoracioById(Integer.valueOf(idVal)); // Get ActivitatDossier details
-			if (valoracio == null) // Not found
+			newValoracio = csr.getValoracioById(Integer.valueOf(idVal)); // Get ActivitatDossier details
+			if (newValoracio == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
 			
-			Dossier dossier = csr.getDossierById(Integer.valueOf(idDossier)); // get the Dossier instance
+			Dossier dossier = csr.getDossierById(Integer.valueOf(valoracio.getIdDossier().getId())); // get the Dossier instance
 			if (dossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			valoracio.setIdDossier(dossier); // Set new dossier in ActivitatDossier
+			newValoracio.setIdDossier(dossier); // Set new dossier in ActivitatDossier
 			
-			Servei servei = csr.getServeiById(Integer.valueOf(idServei)); // get the Dossier instance
+			Servei servei = csr.getServeiById(Integer.valueOf(valoracio.getIdServei().getId())); // get the Dossier instance
 			if (servei == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			valoracio.setIdDossier(dossier); // Set new dossier in ActivitatDossier
+			newValoracio.setIdServei(servei); // Set new servei in ActivitatDossier
 			
-			Parametre parametre = csr.getParametreById(Integer.valueOf(idParam)); // get the Servei instance
+			Parametre parametre = csr.getParametreById(Integer.valueOf(valoracio.getIdParam().getId())); // get the Servei instance
 			if (parametre == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			valoracio.setIdParam(parametre); // Set new servei in ActivitatDossier
+			newValoracio.setIdParam(parametre); // Set new servei in ActivitatDossier
 			
-			valoracio.setValor(Integer.parseInt(valor));
+			valoracio.setValor(valoracio.getValor());
 			
-			csr.updateValoracio(valoracio); // Persist modification NOW
+			csr.updateValoracio(newValoracio); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 		
-		return Response.ok(valoracio).build();
+		return Response.ok(newValoracio).build();
 	}
 	
 	/**
@@ -218,11 +187,11 @@ public class ValoracioRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the text "Succeeded".
 	 */
 	@POST()
-	@Path("")
-	@Consumes("application/xml")
+	@Path("{idVal}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
-	public Response postValoracio(Valoracio valoracio, @Context SecurityContext securityContext) {
+	@Consumes(MediaType.APPLICATION_XML)
+	@PermitAll
+	public Response postValoracio(@PathParam("idVal") String idVal,Valoracio valoracio, @Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -245,7 +214,7 @@ public class ValoracioRWS {
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		try {
 			//FIXME En teoria no necessitariem controlar el id del ActivitatDossier
-			if (csr.getValoracioById(valoracio.getId()) != null) // Code of new ActivitatDossier already in use
+			if (csr.getValoracioById(Integer.valueOf(idVal)) != null) // Code of new ActivitatDossier already in use
 				return Response.status(Status.BAD_REQUEST).header("Message", "Valoracio with code [" + valoracio.getId() + "] already exists").build();
 			csr.addValoracio(valoracio); // Persist new ActivitatDossier NOW
 		} catch (MoroException ex) {
@@ -264,7 +233,7 @@ public class ValoracioRWS {
 	@DELETE()
 	@Path("{idVal}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
+	@PermitAll
 	public Response deleteValoracio(@PathParam("idVal") String idVal, @Context SecurityContext securityContext) {
 		
 		// Display security information if available:

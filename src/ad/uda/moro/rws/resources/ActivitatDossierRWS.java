@@ -122,10 +122,10 @@ public class ActivitatDossierRWS {
 	@PUT()
 	@Path("{idAd}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	@RolesAllowed({"USER","ADMIN"})
-	public Response updateDescripcioActivitatDossier(@PathParam("idAd") String idAd,
-			@FormParam("idDossier") String idDossier,
-			@FormParam("idServei") String idServei,
+	@Consumes(MediaType.APPLICATION_XML)
+//	@RolesAllowed({"USER","ADMIN"})
+	@PermitAll
+	public Response updateDescripcioActivitatDossier(@PathParam("idAd") String idAd, ActivitatDossier activitatDossier,
 			@Context SecurityContext securityContext) {
 		
 		// Display security information if available:
@@ -133,7 +133,7 @@ public class ActivitatDossierRWS {
 			if (securityContext.getUserPrincipal() != null) 
 				System.out.println("putActivitatDossier() - Authenticated user: [" + securityContext.getUserPrincipal().getName() + "]");
 		}
-		System.out.println("updateDescripcioActivitatDossier() - new idDossier: [" + idDossier + "] - new idServei: [" + idServei + "]");
+		System.out.println("updateDescripcioActivitatDossier() - new idDossier: [" + activitatDossier.getIdDossier().getId() + "] - new idServei: [" + activitatDossier.getIdServei().getId() + "]");
 		
 		// Check environment:
 		if (!readyToProcess) // Cannot process requests.
@@ -142,44 +142,31 @@ public class ActivitatDossierRWS {
 		// Check path and form parameter:
 		if (idAd == null)
 			return Response.status(Status.BAD_REQUEST).header("Message", "idAd not specified").build();
-		if (!(Integer.valueOf(idAd)>=0))
-			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid idAd [" + idAd + "]").build();
-		if (idDossier == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier del activitatDossier is null").build();
-		if (idDossier.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier del activitatDossier is empty").build();
-		if (idDossier=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "idDossier del activitatDossier [" + idDossier + "] no es vàlid").build();
-		if (idServei == null)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei del activitatDossier is null").build();
-		if (idServei.length() == 0)
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei del activitatDossier is empty").build();
-		if (idServei=="")
-			return Response.status(Status.BAD_REQUEST).header("Message", "idServei del activitatDossier [" + idServei + "] no es vàlid").build();
+		if (!activitatDossier.hasValidInformation())
+			return Response.status(Status.BAD_REQUEST).header("Message", "Invalid ActivitatDossier [" + activitatDossier + "]").build();
 		
-		System.out.println("updateDescripcioActivitatDossier() - idDossier: [" + idDossier + "] - idServei: [" + idServei + "]");
 		
 		// Get the ActivitatDossier details and modify the name:
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
-		ActivitatDossier activitatDossier = null;
+		ActivitatDossier newActivitatDossier = null;
 		try {
-			activitatDossier = csr.getActivitatDossierById(Integer.valueOf(idAd)); // Get ActivitatDossier details
-			if (activitatDossier == null) // Not found
+			newActivitatDossier = csr.getActivitatDossierById(Integer.valueOf(idAd)); // Get ActivitatDossier details
+			if (newActivitatDossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			Dossier dossier = csr.getDossierById(Integer.valueOf(idDossier)); // get the Dossier instance
+			Dossier dossier = csr.getDossierById(activitatDossier.getIdDossier().getId()); // get the Dossier instance
 			if (dossier == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			activitatDossier.setIdDossier(dossier); // Set new dossier in ActivitatDossier
-			Servei servei = csr.getServeiById(Integer.valueOf(idServei)); // get the Servei instance
+			newActivitatDossier.setIdDossier(dossier); // Set new dossier in ActivitatDossier
+			Servei servei = csr.getServeiById(activitatDossier.getIdServei().getId()); // get the Servei instance
 			if (servei == null) // Not found
 				return Response.status(Status.NO_CONTENT).build();
-			activitatDossier.setIdServei(servei); // Set new servei in ActivitatDossier
-			csr.updateActivitatDossier(activitatDossier); // Persist modification NOW
+			newActivitatDossier.setIdServei(servei); // Set new servei in ActivitatDossier
+			csr.updateActivitatDossier(newActivitatDossier); // Persist modification NOW
 		} catch (MoroException ex) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).header("Message", ex.getMessage()).build();
 		}
 		
-		return Response.ok(activitatDossier).build();
+		return Response.ok(newActivitatDossier).build();
 	}
 	
 	/**
@@ -188,11 +175,11 @@ public class ActivitatDossierRWS {
 	 * @return  A Standard RESTful response. If OK, it returns the text "Succeeded".
 	 */
 	@POST()
-	@Path("")
-	@Consumes("application/xml")
+	@Path("{idAd}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
-	public Response postActivitatDossier(ActivitatDossier activitatDossier, @Context SecurityContext securityContext) {
+	@Consumes(MediaType.APPLICATION_XML)
+	@PermitAll
+	public Response postActivitatDossier(@PathParam("idAd") String idAd, ActivitatDossier activitatDossier, @Context SecurityContext securityContext) {
 
 		// Display security information if available:
 		if (securityContext != null) {
@@ -215,7 +202,7 @@ public class ActivitatDossierRWS {
 		EnquestesServiceRemote csr = factory.getEnquestesService(); // Get the Session Interface reference
 		try {
 			//FIXME En teoria no necessitariem controlar el id del ActivitatDossier
-			if (csr.getActivitatDossierById(activitatDossier.getId()) != null) // Code of new ActivitatDossier already in use
+			if (csr.getActivitatDossierById(Integer.valueOf(idAd)) != null) // Code of new ActivitatDossier already in use
 				return Response.status(Status.BAD_REQUEST).header("Message", "ActivitatDossier with code [" + activitatDossier.getId() + "] already exists").build();
 			csr.addActivitatDossier(activitatDossier); // Persist new ActivitatDossier NOW
 		} catch (MoroException ex) {
@@ -234,7 +221,7 @@ public class ActivitatDossierRWS {
 	@DELETE()
 	@Path("{idAd}")
 	@Produces("text/plain")
-	@RolesAllowed("ADMIN")
+	@PermitAll
 	public Response deleteActivitatDossier(@PathParam("idAd") String idAd, @Context SecurityContext securityContext) {
 		
 		// Display security information if available:

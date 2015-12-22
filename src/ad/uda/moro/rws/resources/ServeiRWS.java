@@ -123,8 +123,7 @@ public class ServeiRWS {
 	@Consumes(MediaType.APPLICATION_XML)
 //	@RolesAllowed({"USER","ADMIN"})
 	@PermitAll
-	public Response updateDescripcioServei(@PathParam("idServei") String idServei,
-			Servei servei,
+	public Response updateDescripcioServei(@PathParam("idServei") String idServei, Servei servei,
 			@Context SecurityContext securityContext) {
 		int idTipus = servei.getIdTipus();
 		String descripcio = servei.getDescripcio();
